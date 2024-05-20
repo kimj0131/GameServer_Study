@@ -7,6 +7,8 @@
 
         static int number = 0;
 
+        static object _obj = new object();
+
         static void Thread_1()
         {
             // atomic = 원자성
@@ -14,16 +16,25 @@
 
             for (int i = 0; i < 100000; i++)
             {
-                //number++;
+                // 상호배제 Mutual Exclusive
+                // 잠금을 풀기전까지 number을 다른 쓰레드에서 건드릴 수 없음
+                // 유지보수가 힘들어진다
+                // try finally문을 사용하면 Exit하지 못하는경우를 방지할 수는 있음
 
-                // 3단계를 걸쳐 연산이 진행되기 때문에 문제가 발생
-                //int temp = number;
-                //temp += 1;
-                //number = temp;
+                //Monitor.Enter(_obj);    // 문을 잠구는 행위
+                //{
+                //    number++;
+                //    //예시 > 이러는 경우 
+                //    //return;
+                //}
+                //Monitor.Exit(_obj);     // 잠금을 푼다
 
-                // Interlocked > 원자성을 보장하게 한다
-                // 성능에서는 매우 큰 손해를 보게된다
-                Interlocked.Increment(ref number);
+                // 위의 번거로운 부분을 lock을 사용하면 쉽게 구현할 수 있음
+                lock (_obj)
+                {
+                    number++;
+                }
+
             }
 
         }
@@ -32,9 +43,10 @@
         {
             for (int i = 0; i < 100000; i++)
             {
-                //number--;
-
-                Interlocked.Decrement(ref number);
+                lock (_obj)
+                {
+                    number++;
+                }
             }
         }
 
