@@ -1,76 +1,66 @@
 ﻿namespace ServerCore
 {
-    class FastLock
+    class SpinLock
     {
-        int id;
-    }
+        // 상태변수
+        volatile int _locked = 0;
 
-    class SessionManager
-    {
-        FastLock l;
-        static object _lock = new object();
-
-        public static void TestSession()
+        // 획득
+        public void Acquire()
         {
-            lock (_lock)
-            {
+            //while (_locked)
+            //{
+            //    // 잠김이 풀리기를 기다린다
+            //}
+            //// 획득한다
+            //_locked = true;
 
+            // 잠기고 풀리는 과정이 한번에 일어나야함
+            while (true)
+            {
+                //int original = Interlocked.Exchange(ref _locked, 1);
+                //if (original == 0)
+                //    break;
+
+                // 다른 일반적인 버전
+                //CAS Compare-And-Swap 연산
+                int expected = 0;   // 예상값
+                int desired = 1;    // 원하는값
+                if (Interlocked.CompareExchange(ref _locked, desired, expected) == expected)
+                    break;
             }
         }
 
-        public static void Test()
+        // 반환
+        public void Release()
         {
-            lock (_lock)
-            {
-                UserManager.TestUser();
-            }
-        }
-    }
-
-    class UserManager
-    {
-        FastLock l;
-        static object _lock = new object();
-
-        public static void Test()
-        {
-            lock (_lock)
-            {
-                SessionManager.TestSession();
-            }
-        }
-
-        public static void TestUser()
-        {
-            lock (_lock)
-            {
-
-            }
+            _locked = 0;
         }
     }
 
     internal class Program
     {
+        static int _num = 0;
 
-        static int number = 0;
-
-        static object _obj = new object();
+        static SpinLock _lock = new SpinLock();
 
         static void Thread_1()
         {
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 100000; i++)
             {
-                SessionManager.Test();
+                _lock.Acquire();
+                _num++;
+                _lock.Release();
             }
         }
 
-        // 데드락
-
         static void Thread_2()
         {
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 100000; i++)
             {
-                UserManager.Test();
+                _lock.Acquire();
+                _num--;
+                _lock.Release();
             }
         }
 
@@ -84,7 +74,7 @@
 
             Task.WaitAll(t1, t2);
 
-            Console.WriteLine(number);
+            Console.WriteLine(_num);
         }
     }
 }
