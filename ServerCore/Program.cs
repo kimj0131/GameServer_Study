@@ -4,19 +4,20 @@
     {
         // true 열린상태 false 닫힌상태
         // 커널단에서는 bool과 비슷한 역할을 한다
-        AutoResetEvent _available = new AutoResetEvent(true);
+        ManualResetEvent _available = new ManualResetEvent(true);
 
         // 획득
         public void Acquire()
         {
-            // 입장 시도
-            _available.WaitOne();
+            // ManualResetEvent는 동작을 나눠서 처리해 lock을 구현할 때 문제가 발생한다
+            _available.WaitOne(); // 입장 시도
+            _available.Reset(); // 문을 닫는다
         }
 
         // 반환
         public void Release()
         {
-            _available.Set();
+            _available.Set();   // 문을 연다
         }
     }
 
