@@ -8,13 +8,6 @@
         // 획득
         public void Acquire()
         {
-            //while (_locked)
-            //{
-            //    // 잠김이 풀리기를 기다린다
-            //}
-            //// 획득한다
-            //_locked = true;
-
             // 잠기고 풀리는 과정이 한번에 일어나야함
             while (true)
             {
@@ -28,6 +21,12 @@
                 int desired = 1;    // 원하는값
                 if (Interlocked.CompareExchange(ref _locked, desired, expected) == expected)
                     break;
+
+                // 반복문을 계속 돌지 않고 휴식
+                // Thread.Sleep(1); // 무조건 휴식 
+                // Thread.Sleep(0); // 조건부 양보 > 우선순위가 나보다 같거나 높은 쓰레드가 없으면 다시 본인한테
+                Thread.Yield();  // 관대한 양보 > 실행이 가능한 쓰레드가 있으면 그 쓰레드가 실행 > 실행 가능한 쓰레드가 없으면 남은시간 소진
+
             }
         }
 
