@@ -1,39 +1,19 @@
 ﻿namespace ServerCore
 {
-    class Lock
-    {
-        // true 열린상태 false 닫힌상태
-        // 커널단에서는 bool과 비슷한 역할을 한다
-        ManualResetEvent _available = new ManualResetEvent(true);
-
-        // 획득
-        public void Acquire()
-        {
-            // ManualResetEvent는 동작을 나눠서 처리해 lock을 구현할 때 문제가 발생한다
-            _available.WaitOne(); // 입장 시도
-            _available.Reset(); // 문을 닫는다
-        }
-
-        // 반환
-        public void Release()
-        {
-            _available.Set();   // 문을 연다
-        }
-    }
-
     internal class Program
     {
         static int _num = 0;
-
-        static Lock _lock = new Lock();
+        // mutex 커널동기화 객체
+        // bool, int, ThreadId 
+        static Mutex _lock = new Mutex();
 
         static void Thread_1()
         {
             for (int i = 0; i < 100000; i++)
             {
-                _lock.Acquire();
+                _lock.WaitOne();
                 _num++;
-                _lock.Release();
+                _lock.ReleaseMutex();
             }
         }
 
@@ -41,9 +21,9 @@
         {
             for (int i = 0; i < 100000; i++)
             {
-                _lock.Acquire();
+                _lock.WaitOne();
                 _num--;
-                _lock.Release();
+                _lock.ReleaseMutex();
             }
         }
 
