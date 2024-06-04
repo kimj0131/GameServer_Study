@@ -12,19 +12,16 @@ namespace ServerCore
         {
             try
             {
-                // 받는다 
-                byte[] recvBuff = new byte[1024];   // 받은 데이터를 저장하는 공간?
-                int recvByte = clientSocket.Receive(recvBuff);     // 몇 byte를 받았는지 반환한다
-                string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvByte);
-                Console.WriteLine($"[From Client] {recvData}");
+                Session session = new Session();
+                session.Start(clientSocket);
 
-                // 보낸다
                 byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to MMORPG Server !");
-                clientSocket.Send(sendBuff);
+                session.Send(sendBuff);
 
-                // 손님을 내보낸다
-                clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
+                Thread.Sleep(1000);
+
+                session.Disconnect();
+                session.Disconnect();
             }
             catch (Exception e)
             {
@@ -41,7 +38,6 @@ namespace ServerCore
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
             // 문지기 listenSocket
-
             // 손님을 입장시킨다 > Init에서 OnAcceptCompleted이벤트를 통해 접속한다
             _listener.Init(endPoint, OnAcceptHandler);
             Console.WriteLine("Listening...");
