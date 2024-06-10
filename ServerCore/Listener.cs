@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace ServerCore
 {
-    internal class Listener
+    public class Listener
     {
         Socket _listenSocket;
         Func<Session> _sessionFactory;

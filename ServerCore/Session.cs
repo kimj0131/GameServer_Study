@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace ServerCore
 {
-    abstract class Session
+    public abstract class Session
     {
         Socket _socket;
         // 끊겼는지 여부를 관리
