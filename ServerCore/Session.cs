@@ -3,6 +3,43 @@ using System.Net.Sockets;
 
 namespace ServerCore
 {
+
+    public abstract class PacketSession : Session
+    {
+        public static readonly short HeaderSize = 2;
+        // [Size(2)][packet(2)][ ... ][Size(2)][packet(2)][ ... ]
+        public sealed override int OnRecv(ArraySegment<byte> buffer)
+        {
+            // 처리할 바이트 길이
+            int processLen = 0;
+
+            while (true)
+            {
+                // 최소한 헤더는 파싱할 수 있는지 확인(size)
+                if (buffer.Count < HeaderSize)
+                    break;
+
+                // 패킷이 완전체로 도작했는지 확인
+                ushort dataSize = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
+                if (buffer.Count < dataSize)
+                    break;
+
+                // 여기까지 왔으면 패킷 조립 가능
+                OnRecvPacket(new ArraySegment<byte>(buffer.Array, buffer.Offset, dataSize));
+
+                processLen += dataSize;
+                buffer = new ArraySegment<byte>(buffer.Array, buffer.Offset + dataSize, buffer.Count - dataSize);
+            }
+
+            return processLen;
+        }
+
+        // OnRecv가 아니라 별도로 건네주는 OnRecvPacket 인터페이스를 받게한다
+        // OnRecv내부에서 처리후 OnRecvPacket을 보내주는 방식이 될것이다
+        public abstract void OnRecvPacket(ArraySegment<byte> buffer);
+
+    }
+
     public abstract class Session
     {
         Socket _socket;
