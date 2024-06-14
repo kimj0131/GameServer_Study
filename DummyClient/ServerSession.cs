@@ -33,33 +33,42 @@ namespace DummyClient
 
     class ServerSession : Session
     {
+        // 참고) 아래 TryWriteBytes방법을 사용하지 못할 경우 다른 방법
+        // array offset에다 value를 넣어주는 부분을 C++과 유사한 문법으로 처리
+        //static unsafe void ToBytes(byte[] array, int offset, ulong value)
+        //{
+        //    fixed (byte* ptr = &array[offset])
+        //        *(ulong*)ptr = value;
+        //}
+
         public override void OnConnected(EndPoint endPoint)
         {
             Console.WriteLine($"OnConnected : {endPoint}");
 
-            PlayerInfoReq packet = new PlayerInfoReq() { size = 4, packetId = (ushort)PacketID.PlayerInfoReq, playerId = 1001 };
+            PlayerInfoReq packet = new PlayerInfoReq() { packetId = (ushort)PacketID.PlayerInfoReq, playerId = 1001 };
 
             // 보낸다
             //for (int i = 0; i < 5; i++)
             {
                 ArraySegment<byte> s = SendBufferHelper.Open(4096);
 
-
-                byte[] size = BitConverter.GetBytes(packet.size);   // 2
-                byte[] packetId = BitConverter.GetBytes(packet.packetId);   // 2
-                byte[] playerId = BitConverter.GetBytes(packet.playerId);   // 8
-
                 ushort count = 0;
-                Array.Copy(size, 0, s.Array, s.Offset + count, 2);
+                bool success = true;
+
+                // [][][][][][][][][][]
+                //success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), packet.size);
                 count += 2;
-                Array.Copy(packetId, 0, s.Array, s.Offset + count, 2);
+                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), packet.packetId);
                 count += 2;
-                Array.Copy(playerId, 0, s.Array, s.Offset + count, 8);
+                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), packet.playerId);
                 count += 8;
+                // 헤더에서 size값을 마지막에 넣어야함(정확한 byte수는 연산이 끝나고나서 알 수 있기 때문
+                success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), count);
 
                 ArraySegment<byte> sendBuff = SendBufferHelper.Close(count);
 
-                Send(sendBuff);
+                if (success)
+                    Send(sendBuff);
             }
         }
 

@@ -63,6 +63,17 @@ namespace Server
             ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
             count += 2;
 
+            switch ((PacketID)id)
+            {
+                case PacketID.PlayerInfoReq:
+                    {
+                        long playerId = BitConverter.ToUInt16(buffer.Array, buffer.Offset + count);
+                        count += 8;
+                        Console.WriteLine($"PlayerInfoReq : {playerId}");
+                    }
+                    break;
+            }
+
             Console.WriteLine($"RecvPacketId : {id}, Size : {size}");
         }
 
