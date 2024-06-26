@@ -11,13 +11,20 @@ namespace PacketGenerator
 
         static void Main(string[] args)
         {
+            string pdlPath = "../PDL.xml";
+
             // XML 파싱
             XmlReaderSettings settings = new XmlReaderSettings()
             {
                 IgnoreComments = true,
                 IgnoreWhitespace = true
             };
-            using (XmlReader r = XmlReader.Create("PDL.xml", settings))
+
+            // PDL경로를 설정하는 인자를 받으면 값을 바꾼다 > 받지않으면 기본경로
+            if (args.Length >= 1)
+                pdlPath = args[0];
+
+            using (XmlReader r = XmlReader.Create(pdlPath, settings))
             {
                 r.MoveToContent();
 
