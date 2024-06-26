@@ -4,18 +4,44 @@ using System.Text;
 
 namespace DummyClient
 {
+    public enum PacketID
+    {
+        PlayerInfoReq = 1,
+        Test = 2,
 
+    }
 
     class PlayerInfoReq
     {
+        public byte testByte;
         public long playerId;
         public string name;
 
-        public struct Skill
+        public class Skill
         {
             public int id;
             public short level;
             public float duration;
+
+            public class Attribute
+            {
+                public int att;
+
+                public void Read(ReadOnlySpan<byte> s, ref ushort count)
+                {
+                    this.att = BitConverter.ToInt32(s.Slice(count, s.Length - count));
+                    count += sizeof(int);
+                }
+
+                public bool Write(Span<byte> s, ref ushort count)
+                {
+                    bool success = true;
+                    success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.att);
+                    count += sizeof(int);
+                    return success;
+                }
+            }
+            public List<Attribute> attributes = new List<Attribute>();
 
             public void Read(ReadOnlySpan<byte> s, ref ushort count)
             {
@@ -25,6 +51,15 @@ namespace DummyClient
                 count += sizeof(short);
                 this.duration = BitConverter.ToSingle(s.Slice(count, s.Length - count));
                 count += sizeof(float);
+                this.attributes.Clear();
+                ushort attributeLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
+                count += sizeof(ushort);
+                for (int i = 0; i < attributeLen; i++)
+                {
+                    Attribute attribute = new Attribute();
+                    attribute.Read(s, ref count);
+                    attributes.Add(attribute);
+                }
             }
 
             public bool Write(Span<byte> s, ref ushort count)
@@ -36,6 +71,10 @@ namespace DummyClient
                 count += sizeof(short);
                 success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.duration);
                 count += sizeof(float);
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)this.attributes.Count);
+                count += sizeof(ushort);
+                foreach (Attribute attribute in this.attributes)
+                    success &= attribute.Write(s, ref count);
                 return success;
             }
         }
@@ -48,6 +87,8 @@ namespace DummyClient
             ReadOnlySpan<byte> s = new ReadOnlySpan<byte>(segment.Array, segment.Offset, segment.Count);
             count += sizeof(ushort);
             count += sizeof(ushort);
+            this.testByte = (byte)segment.Array[segment.Offset + count];
+            count += sizeof(byte);
             this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count));
             count += sizeof(long);
             ushort nameLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
@@ -77,6 +118,8 @@ namespace DummyClient
             count += sizeof(ushort);
             success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.PlayerInfoReq);
             count += sizeof(ushort);
+            segment.Array[segment.Offset + count] = (byte)this.testByte;
+            count += sizeof(byte);
             success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
             count += sizeof(long);
             ushort nameLen = (ushort)Encoding.Unicode.GetBytes(this.name, 0, this.name.Length, segment.Array, segment.Offset + count + sizeof(ushort));
@@ -94,20 +137,6 @@ namespace DummyClient
         }
     }
 
-
-    // server -> client 답해주는 패킷
-    //class PlayerInfoOk : Packet
-    //{
-    //    public int hp;
-    //    public int attack;
-    //}
-
-    public enum PacketID
-    {
-        PlayerInfoReq = 1,
-        PlayerInfoOk = 2,
-    }
-
     class ServerSession : Session
     {
         // 참고) 아래 TryWriteBytes방법을 사용하지 못할 경우 다른 방법
@@ -123,7 +152,11 @@ namespace DummyClient
             Console.WriteLine($"OnConnected : {endPoint}");
 
             PlayerInfoReq packet = new PlayerInfoReq() { playerId = 1001, name = "abcd" };
-            packet.skills.Add(new PlayerInfoReq.Skill() { id = 101, level = 1, duration = 3.0f });
+
+            var skill = new PlayerInfoReq.Skill() { id = 101, level = 1, duration = 3.0f };
+            skill.attributes.Add(new PlayerInfoReq.Skill.Attribute() { att = 77 });
+            packet.skills.Add(skill);
+
             packet.skills.Add(new PlayerInfoReq.Skill() { id = 201, level = 2, duration = 4.0f });
             packet.skills.Add(new PlayerInfoReq.Skill() { id = 301, level = 3, duration = 5.0f });
             packet.skills.Add(new PlayerInfoReq.Skill() { id = 401, level = 4, duration = 6.0f });
