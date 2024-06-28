@@ -7,10 +7,10 @@ namespace Server
     internal class Program
     {
         static Listener _listener = new Listener();
+        public static GameRoom Room = new GameRoom();
 
         static void Main(string[] args)
         {
-            PacketManager.Instance.Register();
 
             // DNS (Domain Name System)
             string host = Dns.GetHostName();
@@ -20,7 +20,7 @@ namespace Server
 
             // 문지기 listenSocket
             // 손님을 입장시킨다 > Init에서 OnAcceptCompleted이벤트를 통해 접속한다
-            _listener.Init(endPoint, () => { return new ClientSession(); });
+            _listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); });
             Console.WriteLine("Listening...");
 
             while (true)

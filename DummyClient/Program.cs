@@ -16,14 +16,16 @@ namespace DummyClient
             // Connector를 이용해 연결
             Connector connector = new Connector();
 
-            connector.Connect(endPoint, () => { return new ServerSession(); });
+            connector.Connect(endPoint,
+                () => { return SessionManager.Instance.Generate(); },
+                10);
 
-            // 동일한 행동을 테스트를 하기 위해 반복 설정
+            // 반복 설정
             while (true)
             {
                 try
                 {
-
+                    SessionManager.Instance.SendForEach();
                 }
                 catch (Exception e)
                 {
@@ -31,7 +33,7 @@ namespace DummyClient
                 }
 
                 // 반복하는 딜레이 설정
-                Thread.Sleep(1000);
+                Thread.Sleep(250);
             }
 
         }
