@@ -12,6 +12,10 @@ class PacketHandler
         if (clientSession.Room == null)
             return;
 
-        clientSession.Room.Broadcast(clientSession, chatPacket.chat);
+        // Broadcast하는 행동 자체를 Action으로 정의 후 Job Queue에 넣어주는 방식으로 변경
+        GameRoom room = clientSession.Room;
+        room.Push(
+            () => room.Broadcast(clientSession, chatPacket.chat)
+        );
     }
 }

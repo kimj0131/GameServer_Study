@@ -3,11 +3,8 @@ using System.Net;
 
 namespace DummyClient
 {
-
-
     class ServerSession : PacketSession
     {
-
         public override void OnConnected(EndPoint endPoint)
         {
             Console.WriteLine($"OnConnected : {endPoint}");

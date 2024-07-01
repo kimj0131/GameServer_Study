@@ -18,7 +18,7 @@ namespace DummyClient
 
             connector.Connect(endPoint,
                 () => { return SessionManager.Instance.Generate(); },
-                10);
+                500);
 
             // 반복 설정
             while (true)
