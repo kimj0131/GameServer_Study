@@ -7,13 +7,24 @@ namespace Server
         List<ClientSession> _sessions = new List<ClientSession>();
         // JobQueue에서 쓰레드 하나만 실행 할 수 있다는 것이 보장되므로, 여기에선 Lock이 필요 없어짐
         JobQueue _jobQueue = new JobQueue();
+        List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>();
 
         public void Push(Action job)
         {
             _jobQueue.Push(job);
         }
 
-        // ** 같은 세션에 있는 사용자들한테 순회하며 메시지를 뿌리는 작업
+        // 모아온 ArraySegment 리스트를 Send하고 비우는 메서드
+        public void Flush()
+        {
+            // N ^ 2
+            foreach (ClientSession s in _sessions)
+                s.Send(_pendingList);
+
+            Console.WriteLine($"Flushed {_pendingList.Count} items");
+            _pendingList.Clear();
+        }
+
         public void Broadcast(ClientSession session, string chat)
         {
             S_Chat packet = new S_Chat();
@@ -21,8 +32,7 @@ namespace Server
             packet.chat = $"{chat} I am {packet.playerId}";
             ArraySegment<byte> segment = packet.Write();
 
-            foreach (ClientSession s in _sessions)
-                s.Send(segment);
+            _pendingList.Add(segment);
         }
 
         public void Enter(ClientSession session)

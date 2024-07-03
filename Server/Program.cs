@@ -18,14 +18,13 @@ namespace Server
             IPAddress ipAddr = iPHost.AddressList[0];
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
-            // 문지기 listenSocket
-            // 손님을 입장시킨다 > Init에서 OnAcceptCompleted이벤트를 통해 접속한다
             _listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); });
             Console.WriteLine("Listening...");
 
             while (true)
             {
-                ;
+                Room.Push(() => Room.Flush());
+                Thread.Sleep(250);
             }
 
         }
