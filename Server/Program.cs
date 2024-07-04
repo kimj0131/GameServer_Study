@@ -4,29 +4,35 @@ using System.Net;
 namespace Server
 {
 
-    internal class Program
+    class Program
     {
         static Listener _listener = new Listener();
         public static GameRoom Room = new GameRoom();
 
+        static void FlushRoom()
+        {
+            Room.Push(() => Room.Flush());
+            JobTimer.Instance.Push(FlushRoom, 250);
+        }
+
         static void Main(string[] args)
         {
-
             // DNS (Domain Name System)
             string host = Dns.GetHostName();
-            IPHostEntry iPHost = Dns.GetHostEntry(host);
-            IPAddress ipAddr = iPHost.AddressList[0];
+            IPHostEntry ipHost = Dns.GetHostEntry(host);
+            IPAddress ipAddr = ipHost.AddressList[0];
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
             _listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); });
             Console.WriteLine("Listening...");
 
+            //FlushRoom();
+            JobTimer.Instance.Push(FlushRoom);
+
             while (true)
             {
-                Room.Push(() => Room.Flush());
-                Thread.Sleep(250);
+                JobTimer.Instance.Flush();
             }
-
         }
     }
 }
