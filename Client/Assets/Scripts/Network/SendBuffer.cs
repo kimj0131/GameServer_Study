@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 
 namespace ServerCore
@@ -7,7 +7,7 @@ namespace ServerCore
     {
         public static ThreadLocal<SendBuffer> CurrentBuffer = new ThreadLocal<SendBuffer>(() => { return null; });
 
-        public static int ChunkSize { get; set; } = 65536 * 100;
+        public static int ChunkSize { get; set; } = 65536;
 
         public static ArraySegment<byte> Open(int reserveSize)
         {
