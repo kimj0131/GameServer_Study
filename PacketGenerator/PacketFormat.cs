@@ -8,7 +8,7 @@
 using System.Collections.Generic;
 using ServerCore;
 
-class PacketManager
+public class PacketManager
 {{
     #region Singleton
     static PacketManager _instance = new PacketManager();
@@ -110,7 +110,8 @@ public interface IPacket
         // {2} 멤버 변수 Read
         // {3} 멤버 변수 Write
         public static string packetFormat =
-@"class {0} : IPacket
+@"
+public class {0} : IPacket
 {{
     {1}
 

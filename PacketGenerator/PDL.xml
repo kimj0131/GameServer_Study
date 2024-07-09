@@ -1,10 +1,40 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <PDL>
-  <packet name="C_Chat">
-    <string name="chat"/>
+  <!--클라이언트가 접속했을때 주변 유저들에 뿌리는 패킷--> 
+  <packet name="S_BroadcastEnterGame">
+    <int name="playetId" />
+    <float name="posX" />
+    <float name="posY" />
+    <float name="posZ" />
   </packet>
-  <packet name="S_Chat">
-    <int name="playerId"/>
-    <string name="chat"/>
+  <!--클라이언트가 접속종료할때 보내는 패킷-->
+  <packet name="C_LeaveGame">
   </packet>
+  <!--클라이언트가 접속종료 했을때 주변 유저들에 뿌리는 패킷-->
+  <packet name="S_BroadcastLeaveGame">
+    <int name="playetId" />
+  </packet>
+  <!--접속한 클라이언트가 주변 유저들의 목록을 받는 패킷-->
+  <packet name="S_PlayerList">
+    <list name="player">
+      <bool name="isSelf" />
+      <int name="playetId" />
+      <float name="posX" />
+      <float name="posY" />
+      <float name="posZ" />
+    </list>
+  </packet>
+  <!--유저 이동 패킷-->
+  <packet name="C_Move">
+    <float name="posX" />
+    <float name="posY" />
+    <float name="posZ" />
+  </packet>
+  <packet name="S_BroadcastMove">
+    <int name="playetId" />
+    <float name="posX" />
+    <float name="posY" />
+    <float name="posZ" />
+  </packet>
+
 </PDL>

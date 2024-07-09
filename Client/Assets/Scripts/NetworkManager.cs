@@ -1,13 +1,18 @@
 using DummyClient;
 using ServerCore;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
 {
     ServerSession _session = new ServerSession();
+
+    public void Send(ArraySegment<byte> sendBuff)
+    {
+        _session.Send(sendBuff);
+    }
 
     void Start()
     {
@@ -23,30 +28,13 @@ public class NetworkManager : MonoBehaviour
         connector.Connect(endPoint,
             () => { return _session; },
             1);
-
-        StartCoroutine("CoSendPacket");
     }
 
     void Update()
     {
-        // 패킷 처리
-        IPacket packet = PacketQueue.Instance.Pop();
-        if (packet != null)
-        {
+        // 프레임내에 들어온 모든 패킷 처리
+        List<IPacket> list = PacketQueue.Instance.PopAll();
+        foreach (IPacket packet in list)
             PacketManager.Instance.HandlePacket(_session, packet);
-        }
-    }
-
-    IEnumerator CoSendPacket()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(3.0f);
-            C_Chat chatPacket = new C_Chat();
-            chatPacket.chat = "Hello Unity!";
-            ArraySegment<byte> segment = chatPacket.Write();
-
-            _session.Send(segment);
-        }
     }
 }
